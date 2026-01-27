@@ -8,67 +8,67 @@
 # - when you would pick each approach
 
 # 0. Imports
-import numpy as np
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
+import time 
 
-# 1. Load the Iris dataset
+# 1) Load data
+iris = load_iris()
+X, y = iris.data, iris.target
 
-# Load the built-in Iris dataset from scikit-learn
-X, y = load_iris(return_X_y=True)
-
-print("Feature shape:", X.shape)
-print("Feature shape:", y.shape)
-
-# 2. Train test split
-
-# Split data into 80% training and 20% test
+# Split(Keep class proportions stable with stratify)
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
+    X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# 3. Train Logistic Regression
+# 3) Logistic Regression pipline
+# NOTE: Scaling isn't always required for LogisticRegression, but it often helps optimization.
+logreg = Pipeline(
+    steps=[
+        ("Scaler", StandardScaler()),
+        ("model", LogisticRegression(max_iter=1000, random_state=42)),
+    ]
+)
 
-# Create Logistic Regression model
-log_reg = LogisticRegression(max_iter=200)
+t0 = time.perf_counter()
+logreg.fit(X_train, y_train)
+logreg_train_time = time.perf_counter() - t0
 
-# Train the model
-log_reg.fit(X_train, y_train)
-
-# Predict on test data
-y_pred_lr = log_reg.predict(X_test)
-
-# Compute accuracy
+y_pred_lr = logreg.predict(X_test)
 acc_lr = accuracy_score(y_test, y_pred_lr)
 
-print("Logistic Regression accuracy:", acc_lr)
-
-# 4. Train a tiny Neural Network (MLP)
-
-# Create a tiny MLP with one hidden layer of 20 neurons
-mlp = MLPClassifier(
-    hidden_layer_sizes=(20,),
-    max_iter=500,
-    random_state=42,
+# 4) Tiny MLP pipeline
+# For MLSPs, scaling is basically mandatory for stable traning
+mlp = Pipeline(
+    steps =[
+        ("scaler", StandardScaler()),
+        ("model", MLPClassifier(
+            hidden_layer_sizes=(16,),
+            activation="relu",
+            solver="adam",
+            max_iter=2000,
+            random_state=42,
+            early_stopping=True,
+        )),
+    ]
 )
-
-# Train the neural network
+t0 = time.perf_counter()
 mlp.fit(X_train, y_train)
+mlp_train_time = time.perf_counter() - t0
 
-# Predict on test data
 y_pred_mlp = mlp.predict(X_test)
-
-# Compute accuracy
 acc_mlp = accuracy_score(y_test, y_pred_mlp)
 
-print("MLP accuracy:", acc_mlp)
+print("=== Result on Iris (test set) ===")
+print(f"LogisticRegression  accuracy={acc_lr:.3f}, train_time={logreg_train_time*1000:.1f} ms")
+print(f"MLPClassifier  accuracy={acc_mlp:.3f}, train_time={mlp_train_time*1000:.1f} ms")
+
 
 # 5. Write comparison comments IN CODE
 
@@ -88,5 +88,13 @@ print("MLP accuracy:", acc_mlp)
 # - Pick LogisticRegression for simple, interpretable baselines.
 # - Pick MLP when the data has nonlinear patterns a linear model cannot capture.
 # - Always try LogisticRegression first as a benchmark.
+
+# 4) When to pick MLPClassifier:
+# When you suspect non-linear decision boundaries AND you have enough data, plus willingness to tune.
+# On tiny datasets it can overfit or be finicky, but it can beat linear models when non-linear structure is real.
+#
+# 5) Practical MLOps angle:
+# LogisticRegression is easier to monitor/debug in production (simpler behavior). MLPs may need more care:
+# calibration checks, drift sensitivity, and more attention to training reproducibility/hyperparameter tracking.
 # -------------------------------
 
