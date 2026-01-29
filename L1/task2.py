@@ -11,10 +11,10 @@
 
 
 
-import torch
+import torch    
 
 # Define function f(x) = x^3 +2x
-def f(x):
+def f(x): 
     return x**3 + 2*x
 
 #Create an input tensor
