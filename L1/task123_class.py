@@ -18,7 +18,7 @@ Instructions:
 import numpy as np
 
 # Både python-listnotation och numparray funkar
-#Numpyarrayer är möjligtvis effektivare i minnet
+# Numpyarrayer är möjligtvis effektivare i minnet
 
 a = [5, 6, 9]
 b = [7, 21, 2]
@@ -36,6 +36,8 @@ l2_norm = np.linalg.norm(vector1)
 print("L2-normalisering för vector1 är:", l2_norm)
 
 l2_norm_vector2 = np.linalg.norm(vector2)
+print("L2-normalisering för vector2 är:" , l2_norm_vector2)
+
 
 cos_sim_v1_v2 = np.dot(vector1, vector2) / (l2_norm * l2_norm_vector2)
 cos_sim_v1_v2_ALTERATIVE = dot_prod / (l2_norm * l2_norm_vector2)
@@ -62,13 +64,14 @@ print("Vi testar funktionen med 7, svaret är :", f(7))
 
 
 # TODO: Implement f(x) in ONE of:
-# - PyTorch (eager)
+# - PyTorch (eager) = VÄLJER DEN 
+
 # - TensorFlow with @tf.function (graph)
 # - JAX with @jit (graph-like)
 
 import torch
 
-x = torch.tensor(3.0)
+x = torch.tensor(7.0)
 y = f(x)
 print(y)
 
@@ -76,25 +79,38 @@ print(y)
 # Om man använder torch.compile, så kör den i graph-stil
 # jag tror dock att det inte funkar på MPS backend (Mac) och inte har CUDA
 
-# TODO: Print the output and note how execution differs
+
 
 
 # Med funktionen nedan kan vi undersöka om vi har cuda på vår dator
 # Att byta till cuda/mps (alltså grafikkortet), ger oss många fler
-# beräkningsenheter => mer effektiv beräkning
+# beräkningsenheter => mer effektiv beräkning 
 # Det här är en av de största anledningarna till PyTorch/TensorFlow
 
 
 
-device ="cuda" if torch.cuda.is_available() else "cpu"
-print(device)
+# ---------    Dessa 2 raderska du ha med i en .py fil som vill köra pytorch -------- #
+
+import torch
 
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-# device for amd
 
+# ------------------------------- #
+
+print(torch.__version__)
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA version PyTorch was built with:", torch.version.cuda)
+print("Device count:", torch.cuda.device_count())
+
+
+print(device)
+
+
+# TODO: Print the output and note how execution differs-Eager vs graph execution
 
 # Time är ett bibliotek, som låter oss mäta tid
 # ofta använder vi det för att jämföra olika kod
+
 import time
 
 # 1. Eager Execution (Standard)
@@ -107,6 +123,7 @@ print(f"Eager execution time: {eager_time} seconds")
 
 # 2. Graph Execution (Compiled)
 # torch.compile uses the inductor backend, which doesn't support MPS yet
+
 
 # This 'traces' the function and optimizes the kernels
 compiled_f = torch.compile(f)
@@ -121,9 +138,30 @@ print(f"Graph execution time: {graph_time} seconds")
 
 
 
+
 # Task 3: Framework comparison in code
 # TODO: Using scikit-learn, load the iris dataset
+
+from sklearn.datasets import load_iris
+data =load_iris()
+#print(data)
+
+X = data["data"]
+y = data["target"]
+
+#print(X)
+#print(y)
+
+
 # TODO: Train a LogisticRegression model
+
+from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X,y)
+print(model.score(X,y))
+
+
 # TODO: Train a tiny MLP (MLPClassifier) on the same data
 # TODO: Compare accuracy and write 3-5 comments in code about:
 # - speed
